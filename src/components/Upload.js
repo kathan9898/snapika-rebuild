@@ -1,8 +1,13 @@
 import React, { useState } from "react";
 import FolderPicker from "./FolderPicker";
 import { uploadFileToDrive } from "../utils/googleDrive";
-import { Snackbar, Alert, LinearProgress, Button, Card, Typography, Box, Avatar, IconButton } from "@mui/material";
-import LogoutIcon from '@mui/icons-material/LogoutOutlined';
+import { Snackbar, Alert, LinearProgress, Button, Card, Typography, Box, Avatar, IconButton, AppBar, Toolbar, Fade } from "@mui/material";
+import LogoutIcon from '@mui/icons-material/Logout';
+import SnapikaLogo from "../assets/SnapikaLogo";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Reuse AnimatedCard from above!
+import AnimatedCard from "./AnimatedCard";
 
 function Upload({ user, token, onLogout }) {
   const [folderId, setFolderId] = useState("");
@@ -60,102 +65,112 @@ function Upload({ user, token, onLogout }) {
   const clearFiles = () => setFiles([]);
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#171923", py: 4 }}>
-      <Card
-        sx={{
-          maxWidth: 430,
-          mx: "auto",
-          px: { xs: 2, sm: 3 },
-          py: 3,
-          borderRadius: 3,
-          boxShadow: 6,
-        }}
-      >
-        {/* User Info */}
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-          <Avatar src={user.picture} sx={{ width: 50, height: 50, mr: 2 }} />
-          <Box>
-            <Typography sx={{ fontWeight: 600, color: "#222" }}>{user.name}</Typography>
-            <Typography sx={{ fontSize: 14, opacity: 0.7 }}>{user.email}</Typography>
+    <Box sx={{ bgcolor: "#ede7f6", minHeight: "100vh", pb: 5 }}>
+      {/* Animated AppBar */}
+      <AppBar position="sticky" sx={{ bgcolor: "#7e30e1", boxShadow: 4 }}>
+        <Toolbar sx={{ justifyContent: "space-between", minHeight: 62 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <SnapikaLogo size={38} />
+            <Typography variant="h6" fontWeight={700} letterSpacing={2} fontFamily="monospace">
+              Snapika
+            </Typography>
           </Box>
-          <IconButton
-            onClick={onLogout}
-            sx={{ marginLeft: "auto", color: "#e53935" }}
-            aria-label="logout"
-          >
-            <LogoutIcon />
-          </IconButton>
-        </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Avatar src={user.picture} sx={{ width: 34, height: 34 }} />
+            <Typography sx={{ color: "#fff", fontWeight: 600 }}>{user.name}</Typography>
+            <IconButton onClick={onLogout} sx={{ color: "#fff" }}>
+              <LogoutIcon />
+            </IconButton>
+          </Box>
+        </Toolbar>
+      </AppBar>
 
-        {/* Folder Picker */}
-        <FolderPicker value={folderId} onChange={setFolderId} />
+      <Fade in timeout={500}>
+        <Box sx={{ mt: { xs: 2, md: 5 }, px: { xs: 1, sm: 0 } }}>
+          <AnimatedCard sx={{ my: { xs: 2, md: 5 } }}>
+            <Typography variant="h5" fontWeight={700} color="#7e30e1" sx={{ mb: 2, textAlign: "center" }}>
+              Upload Files to Drive
+            </Typography>
+            <FolderPicker value={folderId} onChange={setFolderId} />
+            <Button
+              variant="outlined"
+              component="label"
+              fullWidth
+              sx={{ mt: 2, mb: 2, borderColor: "#7e30e1", color: "#7e30e1", fontWeight: 600 }}
+              disabled={uploading}
+            >
+              Select Files
+              <input
+                type="file"
+                hidden
+                multiple
+                onChange={handleFileChange}
+                disabled={uploading}
+              />
+            </Button>
 
-        {/* File Picker */}
-        <Button
-          variant="outlined"
-          component="label"
-          fullWidth
-          sx={{ mt: 2, mb: 2 }}
-          disabled={uploading}
-        >
-          Select Files
-          <input
-            type="file"
-            hidden
-            multiple
-            onChange={handleFileChange}
-            disabled={uploading}
-          />
-        </Button>
-
-        {/* File List with Progress */}
-        {files.length > 0 && (
-          <Box>
-            {files.map((f, idx) => (
-              <Box
-                key={idx}
-                sx={{
-                  my: 1,
-                  py: 1,
-                  px: 1,
-                  borderRadius: 1,
-                  bgcolor: "#e3e7ee",
-                  color: "#333",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 0.5,
-                }}
-              >
-                <Typography sx={{ fontSize: 15, fontWeight: 500 }}>
-                  {f.file.name}
-                </Typography>
-                <Box sx={{ display: "flex", alignItems: "center" }}>
-                  <LinearProgress
-                    variant="determinate"
-                    value={f.progress}
-                    sx={{
-                      flex: 1,
-                      height: 8,
-                      borderRadius: 5,
-                      bgcolor: "#ddd",
-                      mr: 1,
-                    }}
-                  />
-                  <Typography sx={{ width: 45, fontSize: 14, color: "#33691e" }}>
-                    {f.progress}%
-                  </Typography>
-                  <Typography sx={{ width: 60, textAlign: "right", fontSize: 13 }}>
-                    {f.status === "done"
-                      ? "✅"
-                      : f.status === "error"
-                      ? "❌"
-                      : f.status === "uploading"
-                      ? "⬆️"
-                      : ""}
-                  </Typography>
-                </Box>
-              </Box>
-            ))}
+            {/* File List with Progress */}
+            <Box sx={{ mt: 2 }}>
+              <AnimatePresence>
+                {files.map((f, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ y: 24, opacity: 0, scale: 0.95 }}
+                    animate={{ y: 0, opacity: 1, scale: 1 }}
+                    exit={{ y: -24, opacity: 0, scale: 0.8 }}
+                    transition={{ type: "spring", bounce: 0.32, duration: 0.48 }}
+                  >
+                    <Card
+                      variant="outlined"
+                      sx={{
+                        my: 1,
+                        py: 1,
+                        px: 1.5,
+                        borderRadius: 2,
+                        bgcolor: "#f8f7fc",
+                        color: "#333",
+                        boxShadow: "0 4px 16px #7e30e119",
+                        borderColor:
+                          f.status === "done"
+                            ? "#66bb6a"
+                            : f.status === "error"
+                            ? "#e57373"
+                            : "#7e30e133",
+                      }}
+                    >
+                      <Typography sx={{ fontSize: 15, fontWeight: 500 }}>
+                        {f.file.name}
+                      </Typography>
+                      <Box sx={{ display: "flex", alignItems: "center", mt: 0.8 }}>
+                        <LinearProgress
+                          variant="determinate"
+                          value={f.progress}
+                          sx={{
+                            flex: 1,
+                            height: 8,
+                            borderRadius: 5,
+                            bgcolor: "#ede7f6",
+                            mr: 1,
+                          }}
+                        />
+                        <Typography sx={{ width: 45, fontSize: 14, color: "#7e30e1" }}>
+                          {f.progress}%
+                        </Typography>
+                        <Typography sx={{ width: 60, textAlign: "right", fontSize: 13 }}>
+                          {f.status === "done"
+                            ? "✅"
+                            : f.status === "error"
+                            ? "❌"
+                            : f.status === "uploading"
+                            ? "⬆️"
+                            : ""}
+                        </Typography>
+                      </Box>
+                    </Card>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </Box>
             <Box sx={{ display: "flex", mt: 2, gap: 2 }}>
               <Button
                 variant="contained"
@@ -164,6 +179,12 @@ function Upload({ user, token, onLogout }) {
                   !folderId || uploading || files.length === 0 || files.every((f) => f.status === "done")
                 }
                 fullWidth
+                sx={{
+                  bgcolor: "#7e30e1",
+                  color: "#fff",
+                  fontWeight: 600,
+                  "&:hover": { bgcolor: "#5f24a6" },
+                }}
               >
                 Upload
               </Button>
@@ -177,13 +198,13 @@ function Upload({ user, token, onLogout }) {
                 Clear
               </Button>
             </Box>
-          </Box>
-        )}
-      </Card>
+          </AnimatedCard>
+        </Box>
+      </Fade>
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
         open={snackbar.open}
-        autoHideDuration={3000}
+        autoHideDuration={2500}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         sx={{ mt: 3 }}
       >
@@ -201,3 +222,4 @@ function Upload({ user, token, onLogout }) {
 }
 
 export default Upload;
+

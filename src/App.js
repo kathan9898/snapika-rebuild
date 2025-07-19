@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import Login from "./components/Login";
 import Upload from "./components/Upload";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 function App() {
   const [user, setUser] = useState(null); // { email, name, picture }
@@ -31,13 +33,30 @@ function App() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#171923" }}>
-      {!user || !token ? (
-        <Login onLogin={handleLogin} />
-      ) : (
-        <Upload user={user} token={token} onLogout={handleLogout} />
-      )}
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            user && token ? <Navigate to="/upload" replace /> : <Login onLogin={handleLogin} />
+          }
+        />
+        <Route
+          path="/upload"
+          element={
+            <ProtectedRoute user={user}>
+              <Upload user={user} token={token} onLogout={handleLogout} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="*"
+          element={
+            user && token ? <Navigate to="/upload" replace /> : <Navigate to="/login" replace />
+          }
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
