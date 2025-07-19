@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import FolderPicker from "./FolderPicker";
 import { uploadFileToDrive } from "../utils/googleDrive";
-import { Snackbar, Alert, LinearProgress, Button, Card, Typography, Box, Avatar, IconButton, AppBar, Toolbar, Fade } from "@mui/material";
-import LogoutIcon from '@mui/icons-material/Logout';
-import SnapikaLogo from "../assets/SnapikaLogo";
+import { Snackbar, Alert, LinearProgress, Button, Card, Typography, Box, Fade } from "@mui/material";
+// import LogoutIcon from '@mui/icons-material/Logout';
+// import SnapikaLogo from "../assets/SnapikaLogo";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Reuse AnimatedCard from above!
@@ -65,9 +65,9 @@ function Upload({ user, token, onLogout }) {
   const clearFiles = () => setFiles([]);
 
   return (
-    <Box sx={{ bgcolor: "#ede7f6", minHeight: "100vh", pb: 5 }}>
+    <Box sx={{ bgcolor: "#0f0b1504", minHeight: "100vh", pb: 5 }}>
       {/* Animated AppBar */}
-      <AppBar position="sticky" sx={{ bgcolor: "#7e30e1", boxShadow: 4 }}>
+      {/* <AppBar position="sticky" sx={{ bgcolor: "#7e30e1", boxShadow: 4 }}>
         <Toolbar sx={{ justifyContent: "space-between", minHeight: 62 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <SnapikaLogo size={38} />
@@ -83,7 +83,7 @@ function Upload({ user, token, onLogout }) {
             </IconButton>
           </Box>
         </Toolbar>
-      </AppBar>
+      </AppBar> */}
 
       <Fade in timeout={500}>
         <Box sx={{ mt: { xs: 2, md: 5 }, px: { xs: 1, sm: 0 } }}>

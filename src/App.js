@@ -1,15 +1,57 @@
+// App.js
 import React, { useState, useEffect } from "react";
 import Login from "./components/Login";
 import Upload from "./components/Upload";
+import Gallery from "./components/Gallery";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import MainAppBar from "./components/MainAppBar";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 
-function App() {
-  const [user, setUser] = useState(null); // { email, name, picture }
+function AppRoutes({ user, token, onLogout, onLogin }) {
+  const location = useLocation();
+  const tab = ["/upload", "/gallery"].includes(location.pathname)
+    ? location.pathname
+    : false;
+
+  const [currentTab, setCurrentTab] = useState(tab || "/upload");
+
+  useEffect(() => {
+    setCurrentTab(tab || "/upload");
+  }, [tab]);
+
+  if (!user || !token) return <Login onLogin={onLogin} />;
+
+  return (
+    <>
+      <MainAppBar user={user} onLogout={onLogout} tab={currentTab} onTabChange={setCurrentTab} />
+      <Routes>
+        <Route
+          path="/upload"
+          element={
+            <ProtectedRoute user={user}>
+              <Upload user={user} token={token} onLogout={onLogout} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/gallery"
+          element={
+            <ProtectedRoute user={user}>
+              <Gallery token={token} />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Upload user={user} token={token} onLogout={onLogout} />} />
+      </Routes>
+    </>
+  );
+}
+
+export default function App() {
+  const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
 
   useEffect(() => {
-    // Load session from localStorage (optional)
     const savedUser = JSON.parse(localStorage.getItem("snapika_user"));
     const savedToken = localStorage.getItem("snapika_token");
     if (savedUser && savedToken) {
@@ -34,30 +76,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route
-          path="/login"
-          element={
-            user && token ? <Navigate to="/upload" replace /> : <Login onLogin={handleLogin} />
-          }
-        />
-        <Route
-          path="/upload"
-          element={
-            <ProtectedRoute user={user}>
-              <Upload user={user} token={token} onLogout={handleLogout} />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="*"
-          element={
-            user && token ? <Navigate to="/upload" replace /> : <Navigate to="/login" replace />
-          }
-        />
-      </Routes>
+      <AppRoutes user={user} token={token} onLogout={handleLogout} onLogin={handleLogin} />
     </BrowserRouter>
   );
 }
-
-export default App;

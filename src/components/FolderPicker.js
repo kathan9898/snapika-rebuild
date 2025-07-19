@@ -1,7 +1,7 @@
 import React from "react";
 
 const folderIds = process.env.REACT_APP_DRIVE_FOLDER_IDS
-  ? process.env.REACT_APP_DRIVE_FOLDER_IDS.split(",")
+  ? process.env.REACT_APP_DRIVE_FOLDER_IDS.split(",").map(id => id.trim()).filter(Boolean)
   : [];
 
 function FolderPicker({ value, onChange }) {
