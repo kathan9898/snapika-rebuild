@@ -95,11 +95,11 @@ export default function Dashboard() {
         sx={{
           letterSpacing: 1.2,
           fontFamily: "'Montserrat', 'Comic Sans MS', cursive",
-          color: "#232323",
+          color: "#fdf8f8ff",
           mt: 1.5, mb: 3, textShadow: "0 2px 18px #fff7"
         }}
       >
-        👋 Hi, welcome to Snapika Dashboard!
+        👋 Hi, welcome to Snapika!
       </Typography>
 
       {/* Drive stats */}

@@ -25,7 +25,7 @@ export default function MainAppBar({ user, onLogout, tab, onTabChange }) {
                 letterSpacing={2}
                 fontFamily="monospace"
                 sx={{ cursor: "pointer", fontSize: 21 }}
-                onClick={() => navigate("/upload")}
+                onClick={() => navigate("/dashboard")}
               >
                 Snapika
               </Typography>
@@ -89,7 +89,7 @@ export default function MainAppBar({ user, onLogout, tab, onTabChange }) {
             letterSpacing={2}
             fontFamily="monospace"
             sx={{ cursor: "pointer" }}
-            onClick={() => navigate("/upload")}
+            onClick={() => navigate("/dashboard")}
           >
             Snapika
           </Typography>

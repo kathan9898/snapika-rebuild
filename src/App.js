@@ -6,11 +6,13 @@ import Gallery from "./components/Gallery";
 import Dashboard from "./components/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import MainAppBar from "./components/MainAppBar";
+import Intro from "./components/Intro";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 
 // This inner component uses hooks like useLocation safely within Router context
 function AppRoutes({ user, token, onLogout, onLogin }) {
   const location = useLocation();
+  const isIntro = location.pathname === "/";
   // Track which tab (Upload, Gallery, Dashboard) is selected for navigation
   const tab = ["/upload", "/gallery", "/dashboard"].includes(location.pathname)
     ? location.pathname
@@ -22,10 +24,15 @@ function AppRoutes({ user, token, onLogout, onLogin }) {
     setCurrentTab(tab || "/dashboard");
   }, [tab]);
 
+  // Show only Intro page if at "/" (public landing page)
+  if (isIntro) return <Intro />;
+
+  // Require login for all other pages
   if (!user || !token) return <Login onLogin={onLogin} />;
 
   return (
     <>
+      {/* Hide app bar on Intro, show on all others */}
       <MainAppBar
         user={user}
         onLogout={onLogout}
@@ -57,8 +64,11 @@ function AppRoutes({ user, token, onLogout, onLogin }) {
             </ProtectedRoute>
           }
         />
-        {/* Redirect unknown routes to dashboard by default */}
-        <Route path="*" element={<Navigate to="/dashboard" />} />
+        {/* Unknown routes: redirect to dashboard if logged in, else home */}
+        <Route
+          path="*"
+          element={user && token ? <Navigate to="/dashboard" /> : <Navigate to="/" />}
+        />
       </Routes>
     </>
   );
