@@ -8,7 +8,7 @@ const squad = [
   {
     name: "Kathan",
     nickname: "The Einstein of Bad Luck",
-    img: "/friends/kathan.png",
+    img: "/friends/kathu.jpeg",
     ability: "Big Brain Energy, Zero Game",
     icon: "🧠",
     shortRoast: "Has the IQ of Einstein but the dating luck of a cursed amulet. Can solve complex equations but can't solve why girls run away.",
@@ -30,7 +30,7 @@ const squad = [
   {
     name: "Manu",
     nickname: "The Love Magnet",
-    img: "/friends/manu.png", 
+    img: "/friends/manu.jpeg", 
     ability: "Professional Heart Collector",
     icon: "💘",
     shortRoast: "The Casanova who somehow convinced everyone he's smooth. Girls fall for him like they're under Mind Flayer control.",
@@ -52,7 +52,7 @@ const squad = [
   {
     name: "Jayu",
     nickname: "The Buffalo Champion",
-    img: "/friends/jayu.png",
+    img: "/friends/jayu.jpeg",
     ability: "PUBG Legend & Love Winner",
     icon: "🎮",
     shortRoast: "Looks like a buffalo, plays like a pro, engaged like a boss. First to get engaged because someone actually said yes!",
@@ -74,7 +74,7 @@ const squad = [
   {
   name: "Niku",
   nickname: "Pinki the Pro Thakor",
-  img: "/friends/niku.png",
+  img: "/friends/niko.jpeg",
   ability: "First Virginity Stealer & Chapri King",
   icon: "💄",
   shortRoast: "He may look like a chapri, but he's got moves that would make even TikTok blush. First to steal hearts (and innocence) — beware, Pinki's on the prowl!",
@@ -96,7 +96,7 @@ const squad = [
   {
     name: "Flavian",
     nickname: "Karu the Eternal Optimist",
-    img: "/friends/flavian.png",
+    img: "/friends/fm.png",
     ability: "Professional Heartbreak Artist",
     icon: "💔",
     shortRoast: "Sweet guy who thinks every girl is 'the one' - plot twist: she's always someone else's one! Naughty, careless, and hilariously delusional.",
@@ -118,7 +118,7 @@ const squad = [
   {
     name: "Gulabo",
     nickname: "The Broken Smile Warrior",
-    img: "/friends/gulabo.png",
+    img: "/friends/hetu.jpeg",
     ability: "Double Damage Specialist",
     icon: "🦷",
     shortRoast: "Two front teeth broken, heart shattered - this guy's a walking disaster movie. But hey, at least he's consistent!",
@@ -140,7 +140,7 @@ const squad = [
   {
     name: "Dholu & Bholu",
     nickname: "The Fake Gangster Duo",
-    img: "/friends/dholu-bholu.png",
+    img: "/friends/dholu.jpeg",
     ability: "Professional Cute Pretenders",
     icon: "👯‍♂️",
     shortRoast: "Two Gujarati 'kalakars' who think they're badass but are actually just cute teddy bears in disguise. So scary... NOT! 😂",
@@ -162,7 +162,7 @@ const squad = [
   {
     name: "Circuit",
     nickname: "The Human Command Prompt",
-    img: "/friends/circuit.png",
+    img: "/friends/pb.png",
     ability: "Requires Manual Input",
     icon: "🤖",
     shortRoast: "Named Circuit because his brain literally needs commands to function. 'Circuit.exe has stopped working' is his default state.",
