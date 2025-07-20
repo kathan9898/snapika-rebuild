@@ -3,28 +3,44 @@ import React, { useState, useEffect } from "react";
 import Login from "./components/Login";
 import Upload from "./components/Upload";
 import Gallery from "./components/Gallery";
+import Dashboard from "./components/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import MainAppBar from "./components/MainAppBar";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 
+// This inner component uses hooks like useLocation safely within Router context
 function AppRoutes({ user, token, onLogout, onLogin }) {
   const location = useLocation();
-  const tab = ["/upload", "/gallery"].includes(location.pathname)
+  // Track which tab (Upload, Gallery, Dashboard) is selected for navigation
+  const tab = ["/upload", "/gallery", "/dashboard"].includes(location.pathname)
     ? location.pathname
     : false;
 
-  const [currentTab, setCurrentTab] = useState(tab || "/upload");
+  const [currentTab, setCurrentTab] = useState(tab || "/dashboard");
 
   useEffect(() => {
-    setCurrentTab(tab || "/upload");
+    setCurrentTab(tab || "/dashboard");
   }, [tab]);
 
   if (!user || !token) return <Login onLogin={onLogin} />;
 
   return (
     <>
-      <MainAppBar user={user} onLogout={onLogout} tab={currentTab} onTabChange={setCurrentTab} />
+      <MainAppBar
+        user={user}
+        onLogout={onLogout}
+        tab={currentTab}
+        onTabChange={setCurrentTab}
+      />
       <Routes>
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute user={user}>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/upload"
           element={
@@ -41,7 +57,8 @@ function AppRoutes({ user, token, onLogout, onLogin }) {
             </ProtectedRoute>
           }
         />
-        <Route path="*" element={<Upload user={user} token={token} onLogout={onLogout} />} />
+        {/* Redirect unknown routes to dashboard by default */}
+        <Route path="*" element={<Navigate to="/dashboard" />} />
       </Routes>
     </>
   );
@@ -76,7 +93,12 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <AppRoutes user={user} token={token} onLogout={handleLogout} onLogin={handleLogin} />
+      <AppRoutes
+        user={user}
+        token={token}
+        onLogout={handleLogout}
+        onLogin={handleLogin}
+      />
     </BrowserRouter>
   );
 }

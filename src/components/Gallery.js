@@ -85,7 +85,7 @@ export default function Gallery() {
   };
 
   // Dynamic columns based on screen size
-  const gridCols = isMobile ? 3 : 6;
+  // const gridCols = isMobile ? 3 : 6;
 
   return (
     <Box sx={{ bgcolor: "#ede7f6", minHeight: "100vh", px: { xs: 0.5, md: 3 }, pt: 3, pb: 10 }}>

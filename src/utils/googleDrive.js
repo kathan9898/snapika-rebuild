@@ -113,3 +113,19 @@ export async function getDownloadUrlSA(fileId) {
   const token = await getServiceAccountAccessToken();
   return `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&access_token=${token}`;
 }
+
+export async function listFilesWithSizeFromFolderSA(folderId) {
+  const token = await getServiceAccountAccessToken();
+  const q = `'${folderId}' in parents and trashed = false`;
+  const url =
+    "https://www.googleapis.com/drive/v3/files?fields=files(id,name,size,createdTime,mimeType)&q=" +
+    encodeURIComponent(q) +
+    "&orderBy=createdTime desc&pageSize=1000"; // bump page size for stats
+  const resp = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const data = await resp.json();
+  return data.files || [];
+}
