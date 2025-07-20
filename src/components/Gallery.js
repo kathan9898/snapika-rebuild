@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   Box, Typography, Card, CardMedia, CardActions, Button, CircularProgress,
-  Grid, Snackbar, Alert, Chip, Fade
+  Grid, Snackbar, Alert, Chip, Fade, useMediaQuery
 } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
@@ -41,6 +41,7 @@ export default function Gallery() {
   const [snackbar, setSnackbar] = useState({ open: false, msg: "", severity: "info" });
   const [filter, setFilter] = useState("all");
   const [showMoreState, setShowMoreState] = useState({}); // month => true/false
+  const isMobile = useMediaQuery("(max-width:600px)");
 
   useEffect(() => {
     (async () => {
@@ -49,7 +50,6 @@ export default function Gallery() {
         const allFilesArr = await Promise.all(
           FOLDER_IDS.map(folderId => listFilesFromFoldersSA(folderId))
         );
-        // FLATTEN and DEDUPLICATE by file.id
         let allFiles = allFilesArr.flat();
         const fileMap = {};
         allFiles.forEach((file) => { fileMap[file.id] = file; });
@@ -63,7 +63,6 @@ export default function Gallery() {
     })();
   }, []);
 
-  // Group by month/year
   const filesByMonth = {};
   files.forEach((file) => {
     if (filter !== "all" && fileType(file) !== filter) return;
@@ -72,24 +71,24 @@ export default function Gallery() {
     filesByMonth[key].push(file);
   });
 
-  // Only single download
   const handleDownload = (file) => {
     window.open(`https://drive.google.com/uc?id=${file.id}&export=download`, "_blank");
     setSnackbar({ open: true, msg: `Downloading: ${file.name}`, severity: "info" });
   };
 
-  // Open file in Google Drive for preview
   const handleOpenInDrive = (file) => {
     window.open(`https://drive.google.com/file/d/${file.id}/view`, "_blank");
   };
 
-  // "Show more" toggle per month
   const handleShowMore = (monthKey) => {
     setShowMoreState((prev) => ({ ...prev, [monthKey]: true }));
   };
 
+  // Dynamic columns based on screen size
+  const gridCols = isMobile ? 3 : 6;
+
   return (
-    <Box sx={{ bgcolor: "#ede7f6", minHeight: "100vh", px: { xs: 1, md: 3 }, pt: 3, pb: 10 }}>
+    <Box sx={{ bgcolor: "#ede7f6", minHeight: "100vh", px: { xs: 0.5, md: 3 }, pt: 3, pb: 10 }}>
       <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap", justifyContent: "center" }}>
         {FILTERS.map((f) => (
           <Chip
@@ -124,81 +123,105 @@ export default function Gallery() {
                 <Typography variant="h6" fontWeight={800} sx={{ color: "#7e30e1", mb: 1, fontFamily: "monospace" }}>
                   {month}
                 </Typography>
-                <Grid container spacing={2}>
+                <Grid container spacing={isMobile ? 1 : 2}>
                   {filesToShow.map((file) => (
-                    <Grid item xs={6} sm={4} md={3} lg={2} key={file.id}>
+                    <Grid
+                      item
+                      xs={4}
+                      sm={3}
+                      md={2}
+                      key={file.id}
+                      sx={{
+                        display: "flex",
+                        alignItems: "stretch"
+                      }}
+                    >
                       <Card
                         sx={{
                           p: 1,
                           borderRadius: 3,
-                          minHeight: 180,
-                          boxShadow: 4,
+                          minHeight: isMobile ? 130 : 180,
+                          boxShadow: 3,
                           bgcolor: "#fff",
                           position: "relative",
                           display: "flex",
                           flexDirection: "column",
                           alignItems: "center",
+                          justifyContent: "flex-start",
                           transition: "transform .12s",
                           "&:hover": { transform: "scale(1.04)", boxShadow: 8 },
+                          width: "100%",
                         }}
                         elevation={4}
                       >
                         {fileType(file) === "image" ? (
                           <CardMedia
                             component="img"
-                            height="90"
+                            height={isMobile ? "60" : "90"}
                             image={`https://drive.google.com/thumbnail?id=${file.id}&sz=w200-h150`}
                             alt={file.name}
-                            sx={{ objectFit: "cover", borderRadius: 2, mb: 1, width: "95%" }}
+                            sx={{
+                              objectFit: "cover",
+                              borderRadius: 2,
+                              mb: 1,
+                              width: "95%",
+                              aspectRatio: "1/1"
+                            }}
                           />
                         ) : fileType(file) === "video" ? (
                           <Box
                             sx={{
                               width: "100%",
-                              minHeight: 90,
+                              minHeight: isMobile ? 50 : 90,
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
                               mb: 1,
                             }}
                           >
-                            <MovieIcon color="primary" sx={{ fontSize: 50, opacity: 0.8 }} />
+                            <MovieIcon color="primary" sx={{ fontSize: isMobile ? 30 : 50, opacity: 0.8 }} />
                           </Box>
                         ) : (
                           <Box
                             sx={{
                               width: "100%",
-                              minHeight: 90,
+                              minHeight: isMobile ? 50 : 90,
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
                               mb: 1,
                             }}
                           >
-                            <InsertDriveFileIcon color="action" sx={{ fontSize: 44, opacity: 0.7 }} />
+                            <InsertDriveFileIcon color="action" sx={{ fontSize: isMobile ? 26 : 44, opacity: 0.7 }} />
                           </Box>
                         )}
 
                         <Typography
                           sx={{
                             fontWeight: 600,
-                            fontSize: 13.5,
+                            fontSize: isMobile ? 10.5 : 13.5,
                             color: "#222",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                             width: "100%",
                             textAlign: "center",
+                            mb: 0.4,
                           }}
                           title={file.name}
                         >
-                          {file.name.length > 22 ? file.name.slice(0, 22) + "..." : file.name}
+                          {file.name.length > (isMobile ? 12 : 22) ? file.name.slice(0, isMobile ? 12 : 22) + "..." : file.name}
                         </Typography>
-                        <CardActions sx={{ justifyContent: "center", width: "100%", mt: 0.5, gap: 1 }}>
+                        <CardActions sx={{ justifyContent: "center", width: "100%", mt: 0.5, gap: 0.5, p: 0 }}>
                           <Button
                             variant="outlined"
                             size="small"
-                            sx={{ minWidth: 0, px: 1.5, fontWeight: 700 }}
-                            startIcon={<DownloadIcon />}
+                            sx={{
+                              minWidth: 0,
+                              px: 1,
+                              fontWeight: 600,
+                              fontSize: isMobile ? 10 : 14
+                            }}
+                            startIcon={<DownloadIcon sx={{ fontSize: isMobile ? 14 : 20 }} />}
                             onClick={() => handleDownload(file)}
                           >
                             Download
@@ -206,8 +229,13 @@ export default function Gallery() {
                           <Button
                             variant="outlined"
                             size="small"
-                            sx={{ minWidth: 0, px: 1, fontWeight: 700 }}
-                            startIcon={<OpenInNewIcon />}
+                            sx={{
+                              minWidth: 0,
+                              px: 1,
+                              fontWeight: 600,
+                              fontSize: isMobile ? 10 : 14
+                            }}
+                            startIcon={<OpenInNewIcon sx={{ fontSize: isMobile ? 14 : 20 }} />}
                             onClick={() => handleOpenInDrive(file)}
                           >
                             Preview
