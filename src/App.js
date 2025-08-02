@@ -1,4 +1,3 @@
-// App.js
 import React, { useState, useEffect } from "react";
 import Login from "./components/Login";
 import Upload from "./components/Upload";
@@ -8,12 +7,11 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import MainAppBar from "./components/MainAppBar";
 import Intro from "./components/Intro";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { isGoogleTokenValid } from "./utils/checkGoogleToken";
 
-// This inner component uses hooks like useLocation safely within Router context
 function AppRoutes({ user, token, onLogout, onLogin }) {
   const location = useLocation();
   const isIntro = location.pathname === "/";
-  // Track which tab (Upload, Gallery, Dashboard) is selected for navigation
   const tab = ["/upload", "/gallery", "/dashboard"].includes(location.pathname)
     ? location.pathname
     : false;
@@ -24,15 +22,11 @@ function AppRoutes({ user, token, onLogout, onLogin }) {
     setCurrentTab(tab || "/dashboard");
   }, [tab]);
 
-  // Show only Intro page if at "/" (public landing page)
   if (isIntro) return <Intro />;
-
-  // Require login for all other pages
   if (!user || !token) return <Login onLogin={onLogin} />;
 
   return (
     <>
-      {/* Hide app bar on Intro, show on all others */}
       <MainAppBar
         user={user}
         onLogout={onLogout}
@@ -64,7 +58,6 @@ function AppRoutes({ user, token, onLogout, onLogin }) {
             </ProtectedRoute>
           }
         />
-        {/* Unknown routes: redirect to dashboard if logged in, else home */}
         <Route
           path="*"
           element={user && token ? <Navigate to="/dashboard" /> : <Navigate to="/" />}
@@ -79,12 +72,24 @@ export default function App() {
   const [token, setToken] = useState(null);
 
   useEffect(() => {
-    const savedUser = JSON.parse(localStorage.getItem("snapika_user"));
-    const savedToken = localStorage.getItem("snapika_token");
-    if (savedUser && savedToken) {
-      setUser(savedUser);
-      setToken(savedToken);
+    async function checkStoredLogin() {
+      const savedUser = JSON.parse(localStorage.getItem("snapika_user"));
+      const savedToken = localStorage.getItem("snapika_token");
+      if (savedUser && savedToken) {
+        // Check token validity on load
+        const valid = await isGoogleTokenValid(savedToken);
+        if (valid) {
+          setUser(savedUser);
+          setToken(savedToken);
+        } else {
+          setUser(null);
+          setToken(null);
+          localStorage.removeItem("snapika_user");
+          localStorage.removeItem("snapika_token");
+        }
+      }
     }
+    checkStoredLogin();
   }, []);
 
   const handleLogin = (user, token) => {
