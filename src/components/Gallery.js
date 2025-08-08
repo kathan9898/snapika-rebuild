@@ -1,282 +1,285 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
-  Box, Typography, Card, CardMedia, CardActions, Button, CircularProgress,
-  Grid, Snackbar, Alert, Chip, Fade, useMediaQuery
+  Box, Typography, Chip, Button, CircularProgress, Snackbar, Alert,
+  Dialog, IconButton, Tooltip
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import MovieIcon from "@mui/icons-material/Movie";
-import ImageIcon from "@mui/icons-material/Image";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import ImageIcon from "@mui/icons-material/Image";
+import MovieIcon from "@mui/icons-material/Movie";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import { motion, AnimatePresence } from "framer-motion";
+
+import "../heavenly_roasts.css";
 import { listFilesFromFoldersSA } from "../utils/googleDrive";
 
 const FOLDER_IDS = process.env.REACT_APP_GOOGLE_DRIVE_FOLDER_IDS
-  ? process.env.REACT_APP_GOOGLE_DRIVE_FOLDER_IDS.split(",").map(id => id.trim()).filter(Boolean)
+  ? process.env.REACT_APP_GOOGLE_DRIVE_FOLDER_IDS.split(",").map((id) => id.trim()).filter(Boolean)
   : [];
 
+const FILTERS = [
+  { key: "all",   label: "All",    icon: <InsertDriveFileIcon /> },
+  { key: "image", label: "Images", icon: <ImageIcon /> },
+  { key: "video", label: "Videos", icon: <MovieIcon /> },
+  { key: "file",  label: "Files",  icon: <InsertDriveFileIcon /> },
+];
+
+const INITIAL_FILES_PER_MONTH = 18;
+
 function fileType(file) {
-  if (!file.mimeType) return "file";
-  if (file.mimeType.startsWith("image/")) return "image";
-  if (file.mimeType.startsWith("video/")) return "video";
+  const m = file?.mimeType || "";
+  if (m.startsWith("image/")) return "image";
+  if (m.startsWith("video/")) return "video";
+  if (m === "application/pdf") return "pdf";
   return "file";
 }
-
-function monthYear(dateStr) {
+function monthKey(dateStr) {
   const d = new Date(dateStr);
   return `${d.toLocaleString("default", { month: "long" })} ${d.getFullYear()}`;
 }
-
-const FILTERS = [
-  { key: "all", label: "All", icon: <InsertDriveFileIcon /> },
-  { key: "image", label: "Images", icon: <ImageIcon /> },
-  { key: "video", label: "Videos", icon: <MovieIcon /> },
-  { key: "file", label: "Files", icon: <InsertDriveFileIcon /> },
-];
-
-const INITIAL_FILES_PER_MONTH = 6;
+function typeIcon(file) {
+  const t = fileType(file);
+  if (t === "image") return <ImageIcon fontSize="inherit" />;
+  if (t === "video") return <MovieIcon fontSize="inherit" />;
+  if (t === "pdf") return <PictureAsPdfIcon fontSize="inherit" />;
+  return <InsertDriveFileIcon fontSize="inherit" />;
+}
 
 export default function Gallery() {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [snackbar, setSnackbar] = useState({ open: false, msg: "", severity: "info" });
   const [filter, setFilter] = useState("all");
-  const [showMoreState, setShowMoreState] = useState({}); // month => true/false
-  const isMobile = useMediaQuery("(max-width:600px)");
+  const [snackbar, setSnackbar] = useState({ open: false, msg: "", severity: "info" });
+  const [expanded, setExpanded] = useState({});
+  const [preview, setPreview] = useState(null);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
       try {
-        const allFilesArr = await Promise.all(
-          FOLDER_IDS.map(folderId => listFilesFromFoldersSA(folderId))
+        const all = (await Promise.all(FOLDER_IDS.map(listFilesFromFoldersSA))).flat();
+        const map = {};
+        all.forEach((f) => (map[f.id] = f)); // de-dupe
+        const unique = Object.values(map).sort(
+          (a, b) => new Date(b.createdTime) - new Date(a.createdTime)
         );
-        let allFiles = allFilesArr.flat();
-        const fileMap = {};
-        allFiles.forEach((file) => { fileMap[file.id] = file; });
-        allFiles = Object.values(fileMap);
-        allFiles.sort((a, b) => new Date(b.createdTime) - new Date(a.createdTime));
-        setFiles(allFiles);
-      } catch (e) {
+        setFiles(unique);
+      } catch {
         setFiles([]);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     })();
   }, []);
 
-  const filesByMonth = {};
-  files.forEach((file) => {
-    if (filter !== "all" && fileType(file) !== filter) return;
-    const key = monthYear(file.createdTime);
-    if (!filesByMonth[key]) filesByMonth[key] = [];
-    filesByMonth[key].push(file);
-  });
+  const filesByMonth = useMemo(() => {
+    const groups = {};
+    files.forEach((f) => {
+      if (filter !== "all" && fileType(f) !== filter) return;
+      const key = monthKey(f.createdTime);
+      (groups[key] ||= []).push(f);
+    });
+    return groups;
+  }, [files, filter]);
 
   const handleDownload = (file) => {
     window.open(`https://drive.google.com/uc?id=${file.id}&export=download`, "_blank");
     setSnackbar({ open: true, msg: `Downloading: ${file.name}`, severity: "info" });
   };
-
   const handleOpenInDrive = (file) => {
     window.open(`https://drive.google.com/file/d/${file.id}/view`, "_blank");
   };
 
-  const handleShowMore = (monthKey) => {
-    setShowMoreState((prev) => ({ ...prev, [monthKey]: true }));
-  };
-
-  // Dynamic columns based on screen size
-  // const gridCols = isMobile ? 3 : 6;
+  const thumb = useCallback(
+    (file, w = 640, h = 640) =>
+      file.thumbnailLink
+        ? file.thumbnailLink
+        : `https://drive.google.com/thumbnail?id=${file.id}&sz=w${w}-h${h}`,
+    []
+  );
 
   return (
-    <Box sx={{ bgcolor: "#ede7f6", minHeight: "100vh", px: { xs: 0.5, md: 3 }, pt: 3, pb: 10 }}>
-      <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap", justifyContent: "center" }}>
-        {FILTERS.map((f) => (
-          <Chip
-            key={f.key}
-            icon={f.icon}
-            label={f.label}
-            color={filter === f.key ? "secondary" : "default"}
-            onClick={() => setFilter(f.key)}
-            sx={{
-              fontWeight: 600,
-              fontSize: 16,
-              px: 2,
-              borderRadius: 2,
-              boxShadow: filter === f.key ? 2 : 0,
-            }}
-          />
-        ))}
-      </Box>
+    <div className="snapika-landing" style={{ minHeight: "100vh" }}>
+      <div className="snapika-smoke" aria-hidden="true" />
+      <div className="snapika-smoke layer2" aria-hidden="true" />
+      <div className="snapika-vignette" aria-hidden="true" />
 
-      {loading ? (
-        <Box sx={{ textAlign: "center", py: 7 }}>
-          <CircularProgress color="secondary" size={60} />
+      <Box className="app-shell" sx={{ position: "relative", zIndex: 2 }}>
+        {/* Filters */}
+        <Box className="gallery-filterbar">
+          {FILTERS.map((f) => (
+            <Button
+              key={f.key}
+              onClick={() => setFilter(f.key)}
+              className={`pill ${filter === f.key ? "active" : ""}`}
+              startIcon={f.icon}
+              size="small"
+            >
+              {f.label}
+            </Button>
+          ))}
         </Box>
-      ) : (
-        Object.entries(filesByMonth).map(([month, monthFiles]) => {
-          const showAll = showMoreState[month];
-          const filesToShow = showAll ? monthFiles : monthFiles.slice(0, INITIAL_FILES_PER_MONTH);
 
-          return (
-            <Fade in key={month}>
-              <Box sx={{ my: 4 }}>
-                <Typography variant="h6" fontWeight={800} sx={{ color: "#7e30e1", mb: 1, fontFamily: "monospace" }}>
-                  {month}
-                </Typography>
-                <Grid container spacing={isMobile ? 1 : 2}>
-                  {filesToShow.map((file) => (
-                    <Grid
-                      item
-                      xs={4}
-                      sm={3}
-                      md={2}
-                      key={file.id}
-                      sx={{
-                        display: "flex",
-                        alignItems: "stretch"
-                      }}
-                    >
-                      <Card
-                        sx={{
-                          p: 1,
-                          borderRadius: 3,
-                          minHeight: isMobile ? 130 : 180,
-                          boxShadow: 3,
-                          bgcolor: "#fff",
-                          position: "relative",
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "flex-start",
-                          transition: "transform .12s",
-                          "&:hover": { transform: "scale(1.04)", boxShadow: 8 },
-                          width: "100%",
-                        }}
-                        elevation={4}
+        {loading ? (
+          <Box sx={{ textAlign: "center", py: 6 }}>
+            <CircularProgress size={44} />
+          </Box>
+        ) : (
+          Object.entries(filesByMonth).map(([month, monthFiles]) => {
+            const isOpen = expanded[month];
+            const show = isOpen ? monthFiles : monthFiles.slice(0, INITIAL_FILES_PER_MONTH);
+            return (
+              <section key={month} className="gallery-month">
+                <div className="month-sticky">
+                  <Typography className="month-title">{month}</Typography>
+                  <Chip
+                    label={`${monthFiles.length} items`}
+                    size="small"
+                    sx={{ bgcolor: "rgba(255,255,255,0.06)", border: "1px solid var(--glass-brd)", color: "var(--text)" }}
+                  />
+                </div>
+
+                <div className="grid">
+                  <AnimatePresence initial={false}>
+                    {show.map((file) => (
+                      <motion.article
+                        key={file.id}
+                        className="card card--actions"
+                        layout
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        whileHover={{ y: -3 }}
                       >
-                        {fileType(file) === "image" ? (
-                          <CardMedia
-                            component="img"
-                            height={isMobile ? "60" : "90"}
-                            image={`https://drive.google.com/thumbnail?id=${file.id}&sz=w200-h150`}
-                            alt={file.name}
-                            sx={{
-                              objectFit: "cover",
-                              borderRadius: 2,
-                              mb: 1,
-                              width: "95%",
-                              aspectRatio: "1/1"
-                            }}
-                          />
-                        ) : fileType(file) === "video" ? (
-                          <Box
-                            sx={{
-                              width: "100%",
-                              minHeight: isMobile ? 50 : 90,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              mb: 1,
-                            }}
-                          >
-                            <MovieIcon color="primary" sx={{ fontSize: isMobile ? 30 : 50, opacity: 0.8 }} />
-                          </Box>
-                        ) : (
-                          <Box
-                            sx={{
-                              width: "100%",
-                              minHeight: isMobile ? 50 : 90,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              mb: 1,
-                            }}
-                          >
-                            <InsertDriveFileIcon color="action" sx={{ fontSize: isMobile ? 26 : 44, opacity: 0.7 }} />
-                          </Box>
-                        )}
+                        <div className="media">
+                          <CardMediaSmart file={file} src={thumb(file)} onClick={() => setPreview(fileType(file)==="image" ? file : null)} />
+                          <div className="topbadge">
+                            <span className="ftype">{typeIcon(file)}</span>
+                          </div>
+                          <div className="overlay">
+                            <Tooltip title="Open in Drive">
+                              <button className="mini" onClick={() => handleOpenInDrive(file)}>
+                                <OpenInNewIcon fontSize="inherit" />
+                              </button>
+                            </Tooltip>
+                            <Tooltip title="Download">
+                              <button className="mini" onClick={() => handleDownload(file)}>
+                                <DownloadIcon fontSize="inherit" />
+                              </button>
+                            </Tooltip>
+                          </div>
+                        </div>
+                        <div className="meta">
+                          <div className="name" title={file.name}>{file.name}</div>
+                        </div>
+                      </motion.article>
+                    ))}
+                  </AnimatePresence>
+                </div>
 
-                        <Typography
-                          sx={{
-                            fontWeight: 600,
-                            fontSize: isMobile ? 10.5 : 13.5,
-                            color: "#222",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            width: "100%",
-                            textAlign: "center",
-                            mb: 0.4,
-                          }}
-                          title={file.name}
-                        >
-                          {file.name.length > (isMobile ? 12 : 22) ? file.name.slice(0, isMobile ? 12 : 22) + "..." : file.name}
-                        </Typography>
-                        <CardActions sx={{ justifyContent: "center", width: "100%", mt: 0.5, gap: 0.5, p: 0 }}>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            sx={{
-                              minWidth: 0,
-                              px: 1,
-                              fontWeight: 600,
-                              fontSize: isMobile ? 10 : 14
-                            }}
-                            startIcon={<DownloadIcon sx={{ fontSize: isMobile ? 14 : 20 }} />}
-                            onClick={() => handleDownload(file)}
-                          >
-                            Download
-                          </Button>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            sx={{
-                              minWidth: 0,
-                              px: 1,
-                              fontWeight: 600,
-                              fontSize: isMobile ? 10 : 14
-                            }}
-                            startIcon={<OpenInNewIcon sx={{ fontSize: isMobile ? 14 : 20 }} />}
-                            onClick={() => handleOpenInDrive(file)}
-                          >
-                            Preview
-                          </Button>
-                        </CardActions>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
-                {!showAll && monthFiles.length > INITIAL_FILES_PER_MONTH && (
-                  <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+                {!isOpen && monthFiles.length > show.length && (
+                  <div className="showmore">
                     <Button
-                      variant="text"
-                      color="secondary"
-                      onClick={() => handleShowMore(month)}
-                      sx={{ fontWeight: 700, fontSize: 17 }}
+                      className="btn-quiet"
+                      onClick={() => setExpanded((p) => ({ ...p, [month]: true }))}
                     >
                       Show more for {month}
                     </Button>
-                  </Box>
+                  </div>
                 )}
-              </Box>
-            </Fade>
-          );
-        })
-      )}
+              </section>
+            );
+          })
+        )}
 
-      <Snackbar
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        open={snackbar.open}
-        autoHideDuration={2400}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          variant="filled"
+        {/* Lightbox */}
+        <Dialog
+          open={!!preview}
+          onClose={() => setPreview(null)}
+          fullWidth
+          maxWidth="md"
+          PaperProps={{ className: "lightbox" }}
         >
-          {snackbar.msg}
-        </Alert>
-      </Snackbar>
-    </Box>
+          <div className="lightbox-head">
+            <Typography className="lightbox-name" title={preview?.name}>
+              {preview?.name}
+            </Typography>
+            <span style={{ flex: 1 }} />
+            {preview && (
+              <>
+                <Button size="small" className="btn-quiet" onClick={() => handleOpenInDrive(preview)} startIcon={<OpenInNewIcon />}>
+                  Open
+                </Button>
+                <Button size="small" className="btn-quiet" onClick={() => handleDownload(preview)} startIcon={<DownloadIcon />} sx={{ ml: 1 }}>
+                  Download
+                </Button>
+              </>
+            )}
+            <IconButton onClick={() => setPreview(null)} sx={{ ml: 1 }}>
+              <CloseIcon />
+            </IconButton>
+          </div>
+          {preview && (
+            <div className="lightbox-body">
+              <img src={`https://drive.google.com/uc?id=${preview.id}`} alt={preview.name} />
+            </div>
+          )}
+        </Dialog>
+
+        <Snackbar
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+          open={snackbar.open}
+          autoHideDuration={2400}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            variant="filled"
+          >
+            {snackbar.msg}
+          </Alert>
+        </Snackbar>
+      </Box>
+    </div>
+  );
+}
+
+/* ---------- helpers ---------- */
+
+function CardMediaSmart({ file, src, onClick }) {
+  const [loaded, setLoaded] = useState(false);
+  const [err, setErr] = useState(false);
+  const type = fileType(file);
+
+  if (type === "image") {
+    return (
+      <button className="media-btn" onClick={onClick} title={file.name}>
+        {!loaded && <div className="skeleton" />}
+        <img
+          src={src}
+          alt={file.name}
+          loading="lazy"
+          onLoad={() => setLoaded(true)}
+          onError={() => setErr(true)}
+          style={{ opacity: loaded && !err ? 1 : 0 }}
+        />
+        {err && (
+          <div className="file-shimmer">
+            <InsertDriveFileIcon />
+          </div>
+        )}
+      </button>
+    );
+  }
+
+  return (
+    <div className="media-btn" title={file.name} onClick={onClick}>
+      <div className={type === "video" ? "video-shimmer" : "file-shimmer"}>
+        {type === "video" ? <MovieIcon /> : <InsertDriveFileIcon />}
+      </div>
+    </div>
   );
 }

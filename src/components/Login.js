@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import AnimatedCard from "./AnimatedCard";
 import SnapikaLogo from "../assets/SnapikaLogo";
-import { Box, Typography, Button, CircularProgress } from "@mui/material";
+import { Box, Typography, Button, CircularProgress, Chip, Stack } from "@mui/material";
 import { motion } from "framer-motion";
+import "../heavenly_roasts.css";
 
 const CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
@@ -43,7 +44,8 @@ export default function Login({ onLogin }) {
                   },
                   resp.access_token
                 );
-              });
+              })
+              .catch(() => setLoading(false));
           }
         },
       });
@@ -61,78 +63,128 @@ export default function Login({ onLogin }) {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        bgcolor: "#ede7f6",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-      }}
-    >
-      <Box sx={{ mb: 3, textAlign: "center" }}>
-        <motion.div
-          initial={{ scale: 0.7, rotate: -20, opacity: 0 }}
-          animate={{ scale: 1, rotate: 0, opacity: 1 }}
-          transition={{ duration: 0.8, type: "spring", bounce: 0.35 }}
-        >
-          <SnapikaLogo size={90} />
-        </motion.div>
-        <Typography variant="h3" fontWeight={800} color="#7e30e1" mt={2} fontFamily="monospace" letterSpacing={2}>
-          Snapika
-        </Typography>
-        <Typography variant="subtitle1" color="#222" mt={1}>
-          Secure Drive Uploader
-        </Typography>
-      </Box>
-      <AnimatedCard>
-        <Typography
-          variant="h5"
-          fontWeight={700}
-          color="#7e30e1"
-          sx={{ mb: 2, textAlign: "center", fontFamily: "monospace" }}
-        >
-          Login to Continue
-        </Typography>
-        <Typography
-          sx={{
-            color: "#444",
-            fontSize: 16,
-            textAlign: "center",
-            mb: 3,
-            fontFamily: "inherit",
-          }}
-        >
-          Sign in with Google to securely upload files to Snapika’s Drive folders. <br /> We do not see or store your files.
-        </Typography>
-        <Box sx={{ display: "flex", justifyContent: "center" }}>
-          <Button
-            onClick={handleLogin}
-            variant="contained"
-            color="secondary"
-            size="large"
+    <div className="snapika-landing" style={{ minHeight: "100vh" }}>
+      {/* same subtle smoke from the intro page */}
+      <div className="snapika-smoke" aria-hidden="true" />
+      <div className="snapika-smoke layer2" aria-hidden="true" />
+      <div className="snapika-vignette" aria-hidden="true" />
+
+      <Box
+        sx={{
+          position: "relative",
+          zIndex: 2,
+          display: "flex",
+          minHeight: "100vh",
+          alignItems: "center",
+          justifyContent: "center",
+          px: 2,
+          py: 6,
+        }}
+      >
+        <Box sx={{ width: "100%", maxWidth: 520 }}>
+          {/* Hero */}
+          <Box sx={{ mb: 3, textAlign: "center" }}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 6 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              style={{ display: "inline-block" }}
+            >
+              <SnapikaLogo size={84} />
+            </motion.div>
+
+            <motion.h1
+              className="snapika-title"
+              style={{ marginTop: 10, marginBottom: 4 }}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut", delay: 0.05 }}
+            >
+              Snapika <span className="sparkle">★</span>
+            </motion.h1>
+
+            <motion.p
+              className="snapika-subtitle"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, ease: "easeOut", delay: 0.08 }}
+            >
+              Unified internal storage across linked Google Drives.
+              <br />
+              Sign in to continue.
+            </motion.p>
+          </Box>
+
+          {/* Glass card */}
+          <AnimatedCard variant="glass" className="login-card">
+            <Typography
+              variant="h6"
+              sx={{
+                mb: 1.25,
+                textAlign: "center",
+                fontWeight: 800,
+                background: "linear-gradient(90deg,#e9f4ff,#ffe0ea)",
+                WebkitBackgroundClip: "text",
+                color: "transparent",
+                letterSpacing: "0.02em",
+              }}
+            >
+              Login to Continue
+            </Typography>
+
+            <Typography
+              sx={{
+                color: "var(--muted)",
+                fontSize: 15.5,
+                textAlign: "center",
+                mb: 2.2,
+              }}
+            >
+              Google OAuth only. We never see or store your files—uploads go
+              directly to authorized Snapika folders.
+            </Typography>
+
+            <Stack
+              direction="row"
+              spacing={1}
+              justifyContent="center"
+              sx={{ mb: 2 }}
+            >
+              <Chip label="OAuth 2.0" size="small" variant="outlined" className="chip-muted" />
+              <Chip label="Drive.file scope" size="small" variant="outlined" className="chip-muted" />
+              <Chip label="Invite-only" size="small" variant="outlined" className="chip-muted" />
+            </Stack>
+
+            <Box sx={{ display: "flex", justifyContent: "center" }}>
+              <Button
+                onClick={handleLogin}
+                variant="contained"
+                size="large"
+                disabled={loading}
+                startIcon={<SnapikaLogo size={24} />}
+                className="btn-quiet"
+              >
+                {loading ? (
+                  <CircularProgress size={22} sx={{ color: "#fff" }} />
+                ) : (
+                  "Sign in with Google"
+                )}
+              </Button>
+            </Box>
+          </AnimatedCard>
+
+          <Typography
             sx={{
-              bgcolor: "#7e30e1",
-              px: 5,
-              py: 1.2,
-              fontWeight: 600,
-              fontSize: 18,
-              borderRadius: 8,
-              boxShadow: "0 2px 12px #7e30e188",
-              "&:hover": { bgcolor: "#5f24a6" },
+              textAlign: "center",
+              mt: 4,
+              color: "#9fb2c9",
+              fontSize: 12.5,
             }}
-            startIcon={
-              <SnapikaLogo size={30} />
-            }
-            disabled={loading}
           >
-            {loading ? <CircularProgress size={22} sx={{ color: "#fff" }} /> : "Sign in with Google"}
-          </Button>
+            © {new Date().getFullYear()} Snapika — Internal. Not for sale.
+          </Typography>
         </Box>
-      </AnimatedCard>
-      <Typography sx={{ textAlign: "center", mt: 6, color: "#7e30e1", fontSize: 13, fontFamily: "monospace" }}>
-        © {new Date().getFullYear()} Snapika
-      </Typography>
-    </Box>
+      </Box>
+    </div>
   );
 }
