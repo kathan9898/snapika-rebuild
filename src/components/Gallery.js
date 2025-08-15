@@ -143,44 +143,53 @@ export default function Gallery() {
 
                 <div className="grid">
                   <AnimatePresence initial={false}>
-                    {show.map((file) => (
-                      <motion.article
-                        key={file.id}
-                        className="card card--actions"
-                        layout
-                        initial={{ opacity: 0, scale: 0.98 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.98 }}
-                        whileHover={{ y: -3 }}
-                      >
-                        <div className="media">
-                          <CardMediaSmart
-                            file={file}
-                            src={thumb(file)}
-                            onClick={() => fileType(file) === "image" && setPreview(file)}
-                          />
-                          <div className="topbadge">
-                            <span className="ftype">{typeIcon(file)}</span>
+                    {show.map((file) => {
+                      const t = fileType(file);
+                      const canPreviewOrDownload = t === "image" || t === "video";
+
+                      return (
+                        <motion.article
+                          key={file.id}
+                          className="card card--actions"
+                          layout
+                          initial={{ opacity: 0, scale: 0.98 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.98 }}
+                          whileHover={{ y: -3 }}
+                        >
+                          <div className="media">
+                            <CardMediaSmart
+                              file={file}
+                              src={thumb(file)}
+                              onClick={() => (t === "image" ? setPreview(file) : handleOpenInDrive(file))}
+                            />
+
+                            <div className="topbadge">
+                              <span className="ftype">{typeIcon(file)}</span>
+                            </div>
+
+                            {/* Always-visible buttons ONLY for image/video */}
+                            {canPreviewOrDownload && (
+                              <div className="overlay always-visible">
+                                <Tooltip title="Open in Drive">
+                                  <button className="mini" onClick={() => handleOpenInDrive(file)}>
+                                    <OpenInNewIcon fontSize="inherit" />
+                                  </button>
+                                </Tooltip>
+                                <Tooltip title="Download">
+                                  <button className="mini" onClick={() => handleDownload(file)}>
+                                    <DownloadIcon fontSize="inherit" />
+                                  </button>
+                                </Tooltip>
+                              </div>
+                            )}
                           </div>
-                          {/* Buttons always visible */}
-                          <div className="overlay always-visible">
-                            <Tooltip title="Open in Drive">
-                              <button className="mini" onClick={() => handleOpenInDrive(file)}>
-                                <OpenInNewIcon fontSize="inherit" />
-                              </button>
-                            </Tooltip>
-                            <Tooltip title="Download">
-                              <button className="mini" onClick={() => handleDownload(file)}>
-                                <DownloadIcon fontSize="inherit" />
-                              </button>
-                            </Tooltip>
+                          <div className="meta">
+                            <div className="name" title={file.name}>{file.name}</div>
                           </div>
-                        </div>
-                        <div className="meta">
-                          <div className="name" title={file.name}>{file.name}</div>
-                        </div>
-                      </motion.article>
-                    ))}
+                        </motion.article>
+                      );
+                    })}
                   </AnimatePresence>
                 </div>
 
@@ -199,7 +208,7 @@ export default function Gallery() {
           })
         )}
 
-        {/* Lightbox */}
+        {/* Lightbox — only used for IMAGES */}
         <Dialog
           open={!!preview}
           onClose={() => setPreview(null)}
@@ -256,9 +265,9 @@ export default function Gallery() {
 function CardMediaSmart({ file, src, onClick }) {
   const [loaded, setLoaded] = useState(false);
   const [err, setErr] = useState(false);
-  const type = fileType(file);
+  const t = fileType(file);
 
-  if (type === "image") {
+  if (t === "image") {
     return (
       <button className="media-btn" onClick={onClick} title={file.name}>
         {!loaded && <div className="skeleton" />}
@@ -281,8 +290,8 @@ function CardMediaSmart({ file, src, onClick }) {
 
   return (
     <div className="media-btn" title={file.name} onClick={onClick}>
-      <div className={type === "video" ? "video-shimmer" : "file-shimmer"}>
-        {type === "video" ? <MovieIcon /> : <InsertDriveFileIcon />}
+      <div className={t === "video" ? "video-shimmer" : "file-shimmer"}>
+        {t === "video" ? <MovieIcon /> : <InsertDriveFileIcon />}
       </div>
     </div>
   );
