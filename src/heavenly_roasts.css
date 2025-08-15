@@ -542,16 +542,6 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .actions{ display: flex; gap: 6px; }
-.mini{
-  border: 1px solid var(--glass-brd);
-  background: rgba(255,255,255,0.04);
-  color: var(--text);
-  border-radius: 10px;
-  padding: 6px 8px;
-  display: grid; place-items: center;
-  font-size: 0; /* icon-only */
-}
-.mini:hover{ background: rgba(255,255,255,0.08); }
 
 /* Show more */
 .showmore{ display:flex; justify-content:center; margin-top: 10px; }
@@ -581,41 +571,7 @@
   max-width: 100%; height: auto; border-radius: 10px;
 }
 
-/* ===== Gallery fixes/enhancements ===== */
-
-/* Action buttons were tiny circles because font-size:0. Fix + overlay. */
-.card--actions .media { position: relative; }
-.card--actions .overlay{
-  position:absolute; inset:0; display:flex; gap:8px;
-  align-items:flex-start; justify-content:flex-end; padding:8px;
-  opacity:0; transition: opacity .18s ease;
-  background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0) 50%);
-}
-.card--actions:hover .overlay{ opacity:1; }
-@media (max-width: 720px){ .card--actions .overlay{ opacity:1; background:none; padding:6px; } }
-
-.mini{
-  border:1px solid var(--glass-brd);
-  background: rgba(255,255,255,0.10);
-  color: var(--text);
-  border-radius: 10px;
-  padding: 6px;
-  display: grid; place-items:center;
-  font-size: 16px; /* make icons visible */
-  line-height: 0;
-}
-.mini:hover{ background: rgba(255,255,255,0.18); }
-
-/* Top-left filetype chip */
-.topbadge{
-  position:absolute; left:8px; top:8px;
-  background: rgba(255,255,255,0.08);
-  border:1px solid var(--glass-brd);
-  border-radius:10px; padding: 4px 6px;
-  color: var(--text); font-size: 14px;
-}
-
-/* Media button / skeleton */
+/* ===== Gallery: helpers (skeleton & media button) ===== */
 .media-btn{ display:block; width:100%; height:100%; border:0; padding:0; background:transparent; cursor:pointer; }
 .media{ width:100%; aspect-ratio:1/1; overflow:hidden; border-radius: 12px 12px 0 0; }
 .media img{ width:100%; height:100%; object-fit:cover; display:block; transition: opacity .2s ease; }
@@ -627,7 +583,56 @@
 }
 @keyframes gallery-shimmer{ 0%{background-position:0 0} 100%{background-position:300% 0} }
 
-/* Keep previous modern grid + lightbox styles from last patch */
+/* ===== Gallery: always-visible actions (no hover) ===== */
+.card--actions .media { position: relative; }
+.card--actions .overlay{
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  left: auto;
+  bottom: auto;
+  display: flex;
+  gap: 8px;
+  padding: 0;
+  background: transparent;
+  opacity: 1 !important;
+  pointer-events: auto;
+  z-index: 2;
+}
+@media (max-width: 720px){
+  .card--actions .overlay{ top: 6px; right: 6px; gap: 6px; }
+}
+
+/* Scoped pill buttons for gallery cards */
+.card--actions .mini{
+  border: 1px solid var(--glass-brd);
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  border-radius: 10px;
+  padding: 6px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  line-height: 0;
+  backdrop-filter: blur(4px) saturate(140%);
+  transition: transform .16s ease, background .16s ease, border-color .16s ease;
+}
+.card--actions .mini:hover{
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.16);
+  border-color: rgba(255,255,255,0.2);
+}
+
+/* Top-left filetype chip */
+.topbadge{
+  position: absolute; left: 8px; top: 8px;
+  background: rgba(0,0,0,0.45);
+  border: 1px solid var(--glass-brd);
+  border-radius: 10px; padding: 4px 6px;
+  color: #e7eef8; font-size: 14px;
+  backdrop-filter: blur(4px) saturate(140%);
+  z-index: 2;
+}
 
 /* ===== Premium Glass AppBar ===== */
 .appbar-pro{
