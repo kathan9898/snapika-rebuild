@@ -154,11 +154,16 @@ export default function Gallery() {
                         whileHover={{ y: -3 }}
                       >
                         <div className="media">
-                          <CardMediaSmart file={file} src={thumb(file)} onClick={() => setPreview(fileType(file)==="image" ? file : null)} />
+                          <CardMediaSmart
+                            file={file}
+                            src={thumb(file)}
+                            onClick={() => fileType(file) === "image" && setPreview(file)}
+                          />
                           <div className="topbadge">
                             <span className="ftype">{typeIcon(file)}</span>
                           </div>
-                          <div className="overlay">
+                          {/* Buttons always visible */}
+                          <div className="overlay always-visible">
                             <Tooltip title="Open in Drive">
                               <button className="mini" onClick={() => handleOpenInDrive(file)}>
                                 <OpenInNewIcon fontSize="inherit" />
@@ -248,7 +253,6 @@ export default function Gallery() {
 }
 
 /* ---------- helpers ---------- */
-
 function CardMediaSmart({ file, src, onClick }) {
   const [loaded, setLoaded] = useState(false);
   const [err, setErr] = useState(false);

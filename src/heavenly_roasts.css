@@ -557,11 +557,17 @@
 .lightbox-head{
   display: flex; align-items: center; padding: 8px 10px; gap: 8px;
   border-bottom: 1px solid var(--glass-brd);
-  background: rgba(255,255,255,0.03);
+  background: rgba(0,0,0,0.7);
+  color: white
 }
-.lightbox-name{
-  font-weight: 800; font-size: 14px; color: var(--text);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+
+
+.lightbox-name {
+  color: #6dc9ff; /* Light blue accent */
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 6px rgba(0,0,0,0.7);
 }
 .lightbox-body{
   padding: 8px; background: #06070a;
@@ -727,4 +733,9 @@
 .drawer-item.Mui-selected .MuiListItemText-primary {
   color: #ffffff !important;
   font-weight: 800;
+}
+
+.overlay.always-visible {
+  opacity: 1 !important;
+  visibility: visible !important;
 }
